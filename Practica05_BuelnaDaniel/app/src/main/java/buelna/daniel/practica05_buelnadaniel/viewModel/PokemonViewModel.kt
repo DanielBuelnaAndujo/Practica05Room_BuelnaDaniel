@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,6 +21,9 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
+
+    private val _minLevel = MutableStateFlow(1)
+    val minLevel = _minLevel.asStateFlow()
 
     private val availablePokemons = listOf(
         PokemonEntity(name = "Pikachu", number = "025", type = "Electric"),
@@ -97,23 +101,25 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
         }
     }
 
-    val pokemonsState: StateFlow<List<PokemonEntity>> = _searchQuery
-        .flatMapLatest { query ->
-            if (query.isBlank()) {
-                repository.allPokemons
-            } else {
-                if (query.isDigitsOnly()) {
-                    repository.filterByMinLevel(query.toInt())
-                } else {
-                    repository.filterByNameOrType(query)
-                }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val pokemonsState: StateFlow<List<PokemonEntity>> = combine(
+        _searchQuery,
+        _minLevel
+    ) { query, level ->
+        // Cada vez que cambie el texto O el nivel, se crea este par
+        Pair(query, level)
+    }.flatMapLatest { (query, level) ->
+        // Llamamos al nuevo método del DAO que creamos antes
+        repository.filterByNameOrTypeAndLevel("%$query%", level)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Función para que el Slider avise al ViewModel
+    fun onLevelFilterChanged(newLevel: Int) {
+        _minLevel.value = newLevel
+    }
     fun onSearchQueryChanged(newQuery: String) {
         _searchQuery.value = newQuery
     }

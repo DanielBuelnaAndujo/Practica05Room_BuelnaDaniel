@@ -24,4 +24,8 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
     fun filterByMinLevel(minLevel: Int): Flow<List<PokemonEntity>> {
         return pokemonDao.filterByMinLevel(minLevel)
     }
+
+    fun filterByNameOrTypeAndLevel(text: String, minLevel: Int = 1): Flow<List<PokemonEntity>> {
+        return pokemonDao.filterByNameTypeAndLevel(text, minLevel)
+    }
 }

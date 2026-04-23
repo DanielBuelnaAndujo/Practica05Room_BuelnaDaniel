@@ -27,12 +27,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,6 +56,7 @@ fun BolsaScreen(pokemonViewModel: PokemonViewModel) {
     val scope = rememberCoroutineScope()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var levelFilter by remember { mutableFloatStateOf(1f) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -96,6 +99,26 @@ fun BolsaScreen(pokemonViewModel: PokemonViewModel) {
                     unfocusedBorderColor = Color.Transparent
                 )
             )
+
+            Spacer(Modifier.height(8.dp))
+
+            Column(horizontalAlignment = Alignment.Start, modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Filtrar por nivel mínimo: ${levelFilter.toInt()}",
+                    style = MaterialTheme.typography.labelLarge
+                )
+
+                Slider(
+                    value = levelFilter,
+                    onValueChange = {
+                        levelFilter = it
+                        pokemonViewModel.onLevelFilterChanged(it.toInt()) // Avisamos al ViewModel
+                    },
+                    valueRange = 1f..100f, // Rango de niveles Pokémon
+                    steps = 98, // Esto crea "puntos" para que el slider se mueva de 1 en 1
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
 

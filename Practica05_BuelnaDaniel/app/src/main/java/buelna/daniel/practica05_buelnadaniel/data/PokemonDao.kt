@@ -25,6 +25,9 @@ interface PokemonDao {
     @Query("SELECT * FROM pokemon_table WHERE name LIKE :text OR type LIKE :text")
     fun filterByNameOrType(text: String): Flow<List<PokemonEntity>>
 
+    @Query(" SELECT * FROM pokemon_table WHERE (name LIKE :text OR type LIKE :text) AND level >= :minLevel")
+    fun filterByNameTypeAndLevel(text: String, minLevel: Int): Flow<List<PokemonEntity>>
+
     @Query("SELECT * FROM pokemon_table WHERE level >= :minLevel ORDER BY level DESC")
     fun filterByMinLevel(minLevel: Int): Flow<List<PokemonEntity>>
 }
