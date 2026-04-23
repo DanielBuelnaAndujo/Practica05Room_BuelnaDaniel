@@ -35,6 +35,10 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
         PokemonEntity(name = "Arbok", number = "024", type = "Poison"),
         PokemonEntity(name = "Clefairy", number = "035", type = "Fairy")
     )
+
+    var pokemonToDelete by mutableStateOf<PokemonEntity?>(value = null)
+        private set
+
     var wildPokemon by mutableStateOf<PokemonEntity?>(value = null)
         private set
 
@@ -43,6 +47,10 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
 
     var pokemonSeEscapo by mutableStateOf(value = false)
         private set
+
+    fun selectedPokemonToDelete(pokemon: PokemonEntity?) {
+        pokemonToDelete = pokemon
+    }
 
     fun searchPokemon() {
         wildPokemon = availablePokemons.random()
@@ -110,9 +118,11 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
         _searchQuery.value = newQuery
     }
 
-    fun deletePokemon(pokemon: PokemonEntity) {
+    fun deletePokemon() {
         viewModelScope.launch {
-            repository.delete(pokemon)
+            pokemonToDelete?.let {
+                repository.delete(it)
+            }
         }
     }
 
@@ -120,13 +130,17 @@ class PokemonViewModel(private val repository: PokemonRepository): ViewModel() {
         viewModelScope.launch {
             val success = (1..100).random() > 50
 
-            if (success) {
-                val newLevel = pokemon.level + 1
-                val newPokemon = pokemon.copy(level = newLevel)
-                repository.update(newPokemon)
-                onResult("¡Felicidades! ${pokemon.name} subió al nivel $newLevel")
+            if (pokemon.level >= 100) {
+                onResult("El Pokemon: ${pokemon.name} ha alcanzado el nivel máximo")
             } else {
-                onResult("Lástima, ${pokemon.name} no logró subir de nivel esta vez")
+                if (success) {
+                    val newLevel = pokemon.level + 1
+                    val newPokemon = pokemon.copy(level = newLevel)
+                    repository.update(newPokemon)
+                    onResult("¡Felicidades! ${pokemon.name} subió al nivel $newLevel")
+                } else {
+                    onResult("Lástima, ${pokemon.name} no logró subir de nivel esta vez")
+                }
             }
         }
     }
